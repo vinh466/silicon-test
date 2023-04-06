@@ -3,3 +3,7 @@
 a {
   text-decoration: none;
 }
+a:-webkit-any-link {
+  color: inherit;
+  cursor: pointer;
+}
