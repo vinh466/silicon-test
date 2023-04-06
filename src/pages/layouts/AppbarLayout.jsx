@@ -27,7 +27,7 @@ function AppbarLayout() {
         <div>
             <Box sx={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', }}>
                 <img
-                    src="/public/silicon-stack-logo-dark.png"
+                    src="/silicon-stack-logo-dark.png"
                     alt="logo"
                     style={{
                         width: isStart ? '400px' : '200px',
