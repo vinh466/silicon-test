@@ -8,6 +8,5 @@ export default defineConfig({
     alias: {
       'node-fetch': 'axios',
     },
-  },
-  define: { global: {} }
+  }, 
 })
