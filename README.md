@@ -1,9 +1,11 @@
 # Git search
 
+## Demo <a href="https://git-search-lilac.vercel.app/" target="_blank" rel="noopener noreferrer nofollow">git-search-lilac.vercel.app</a>
+
 ## Features
 
-- Search and display github user
-- Browse repo and commit
+- Search and display github users
+- Browse repo and commits
 
 ## Prerequisites
 
@@ -15,7 +17,7 @@
 VITE_GITHUB_TOKEN = personal - access;
 ```
 
-- installation & run dev
+- Installation & run dev
 
 ```sh
 yarn
