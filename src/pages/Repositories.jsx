@@ -1,82 +1,65 @@
-import { Box, Breadcrumbs, CircularProgress, Container, Divider, Grid, IconButton, InputBase, List, ListItemButton, ListItemText, Pagination, Skeleton, TextField, Toolbar, Typography } from "@mui/material"
+import { Box, Breadcrumbs, CircularProgress, Container, Divider, Grid, IconButton, List, ListItemButton, Pagination, Skeleton, Typography } from "@mui/material"
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import StarIcon from '@mui/icons-material/Star';
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
-import { Octokit } from "@octokit/core";
 import { SetRepoResultAction, SetRepoResultPageAction, SetSearchValueAction } from "../store/action";
 import { StoreContext } from "../store";
+import GithubService from "../services/githubApi.service";
 
 const perPage = 10
 
 function Repositories() {
     const { user: userRepo } = useParams()
-    const { dispatch, state: { searchValue, repoResult, repoResultPage, repoResultMessage } } = useContext(StoreContext);
+    const { dispatch, state: { searchValue, repoResult, repoResultPage, repoResultMessage, repoResultError } } = useContext(StoreContext);
     const [paginationPage, setPaginationPage] = useState(0)
     const [isChangePage, setIsChangePage] = useState(false)
     const navigate = useNavigate()
 
     useEffect(() => {
-        const controller = new AbortController()
         dispatch(SetRepoResultAction([]))
-        getRepos(controller.signal)
-        return () => controller.abort()
     }, [userRepo])
 
     useEffect(() => {
         const controller = new AbortController()
         getRepos(controller.signal)
         return () => controller.abort()
-    }, [repoResultPage])
+    }, [repoResultPage, userRepo])
 
     const getRepos = async (signal) => {
         try {
-            const octokit = new Octokit({
-                auth: import.meta.env.VITE_GITHUB_TOKEN,
-                request: { signal }
-            });
-            const result = await octokit.request('GET /users/{username}/repos', {
+            const githubService = new GithubService(signal)
+            const getRepos = githubService.getUserRepos({
                 username: userRepo,
                 page: repoResultPage,
                 per_page: perPage,
-                headers: {
-                    'X-GitHub-Api-Version': '2022-11-28'
-                }
             })
-            const user = await octokit.request('GET /users/{username}', {
-                username: userRepo,
-                headers: {
-                    'X-GitHub-Api-Version': '2022-11-28'
-                }
-            })
-            if (result.status === 200 && user.status === 200) {
+            const getUser = githubService.getUser(userRepo)
+            const [repoResult, userResult] = await Promise.all([getRepos, getUser])
+
+
+            if (repoResult.status === 200 && userResult.status === 200) {
+                const repos = repoResult.data
+                const user = userResult.data
                 let message = ''
-                if (result.data.length === 0)
+                if (repos?.length === 0)
                     message = 'Empty'
-                else {
-                    const repoCount = user.data.public_repos
-                    setPaginationPage(Math.ceil(repoCount / perPage))
-                    // setUserRepos(result.data)
-                    // setFetchMessage(repoCount + ' repo')
-                    message = repoCount + ' repo'
+                else if (user?.public_repos) {
+                    setPaginationPage(Math.ceil(user.public_repos / perPage))
+                    message = user.public_repos + ' repo'
                 }
                 dispatch(SetRepoResultAction({
-                    repoResult: result?.data,
+                    repoResult: repos,
                     repoResultMessage: message
                 }))
             }
         } catch (error) {
-            if (error.code !== 20) {
-                let message = error.message || ''
-                if (error?.code === 500) message = 'Internet is not available'
-                // console.error('err', error.code);
-                // setFetchMessage(message)
-                dispatch(SetRepoResultAction({
-                    repoResult: [],
-                    repoResultError: message
-                }))
-            }
+            // console.log(error);
+            dispatch(SetRepoResultAction({
+                repoResult: [],
+                repoResultError: error.message || 'Error'
+            }))
         } finally {
             setIsChangePage(false)
         }
@@ -118,7 +101,11 @@ function Repositories() {
                 <Typography variant="h6" align="center">
                     {repoResultMessage}
                 </Typography>}
-            {!repoResultMessage && repoResult?.length === 0 &&
+            {repoResultError &&
+                <Typography variant="h6" align="center" color={red[300]}>
+                    {repoResultError}
+                </Typography>}
+            {!repoResultMessage && !repoResultError && repoResult?.length === 0 &&
                 <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                     <CircularProgress />
                 </Box>}

@@ -4,7 +4,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
 import { useContext, useEffect, useMemo, useState } from "react";
 import { StoreContext } from "../../store";
-import { SetSearchValueAction } from "../../store/action";
+import { SetSearchValueAction, SetUserResultAction } from "../../store/action";
 
 function AppbarLayout() {
     const { dispatch, state: { searchValue, userResult } } = useContext(StoreContext);
@@ -14,7 +14,9 @@ function AppbarLayout() {
     const [searchInput, setSearchInput] = useState('')
     const isStart = useMemo(() => !searchValue && location.pathname === '/', [searchValue, location.pathname])
     useEffect(() => { setSearchInput(searchValue) }, [searchValue])
-
+    useEffect(() => {
+        dispatch(SetUserResultAction([]))
+    }, [searchValue])
     const handleSearch = async (e) => {
         e.preventDefault()
         if (searchInput) {

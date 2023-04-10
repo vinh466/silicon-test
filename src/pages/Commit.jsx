@@ -1,12 +1,11 @@
-import { AppBar, Avatar, Box, Breadcrumbs, Button, ButtonBase, CircularProgress, Container, Divider, Grid, IconButton, List, ListItemButton, TextField, Toolbar, Tooltip, Typography } from "@mui/material"
+import { Avatar, Box, Breadcrumbs, CircularProgress, Container, Divider, Grid, IconButton, List, ListItemButton, Tooltip, Typography } from "@mui/material"
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Link, useNavigate, useParams } from "react-router-dom";
-import SearchIcon from '@mui/icons-material/Search';
 import HomeIcon from '@mui/icons-material/Home';
-import { useEffect, useState, useLayoutEffect, useCallback, useContext } from "react";
-import { Octokit } from "@octokit/core";
+import { useEffect, useState, useContext } from "react";
 import { StoreContext } from "../store";
 import { SetSearchValueAction } from "../store/action";
+import GithubService from "../services/githubApi.service";
 
 function Commit() {
     const [repoCommits, setRepoCommits] = useState([])
@@ -15,41 +14,27 @@ function Commit() {
     const [fetchMessage, setFetchMessage] = useState('')
     const navigate = useNavigate()
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         const controller = new AbortController()
         getRepoCommits(controller.signal)
         return () => controller && controller.abort()
     }, [repoName, userRepo])
 
 
-    const getRepoCommits = useCallback(
-        async (signal) => {
-            try {
-                const octokit = new Octokit({
-                    auth: import.meta.env.VITE_GITHUB_TOKEN,
-                    request: { signal }
-                });
-                const result = await octokit.request('GET /repos/{username}/{repo}/commits', {
-                    username: userRepo,
-                    repo: repoName,
-                    per_page: 10,
-                    headers: {
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    }
-                })
-                setRepoCommits(result.data)
-            } catch (error) {
-                if (error.code !== 20) {
-                    let message = error.message || ''
-                    if (error?.code === 500) message = 'Internet is not available'
-                    // console.error('err', error);
-                    setFetchMessage(message)
-                }
-
-            }
-        },
-        [repoName, userRepo],
-    )
+    const getRepoCommits = async (signal) => {
+        try {
+            setFetchMessage('')
+            const githubService = new GithubService(signal)
+            const result = await githubService.getCommits({
+                username: userRepo,
+                repo: repoName,
+            })
+            setFetchMessage(!result.data?.length ? 'Empty' : '')
+            setRepoCommits(result.data || [])
+        } catch (error) {
+            setFetchMessage(error.message || 'Error')
+        }
+    }
 
 
     const breadcrumbs = [
@@ -71,7 +56,6 @@ function Commit() {
     return (
         <Container
             sx={{
-                minHeight: '100vh',
                 paddingTop: '10px'
             }}
         >

@@ -13,9 +13,9 @@ const SetUserResultAction = ({ userResult, searchMessage, searchError }) => ({
     type: action.SetUserResult,
     payload: { userResult, searchMessage, searchError }
 })
-const SetUserResultPageAction = (userPage) => ({
+const SetUserResultPageAction = (userPage, userPaginationPage) => ({
     type: action.SetUserResultPage,
-    payload: { userPage }
+    payload: { userPage, userPaginationPage }
 })
 const SetRepoResultAction = ({ repoResult, repoResultMessage, repoResultError }) => ({
     type: action.SetRepoResult,

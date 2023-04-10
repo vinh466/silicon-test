@@ -5,6 +5,7 @@ export const initialState = {
 
     userResult: [],
     userResultPage: 1,
+    userPaginationPage: 1,
     searchMessage: '',
     searchError: '',
 
@@ -32,7 +33,8 @@ const reducer = (state, action) => {
         case DispathAction.SetUserResultPage:
             return {
                 ...state,
-                userResultPage: payload?.userPage || 1
+                userResultPage: payload?.userPage || 1,
+                userPaginationPage: payload?.userPaginationPage || state.userPaginationPage
             };
         case DispathAction.SetRepoResult:
 
